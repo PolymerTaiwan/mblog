@@ -1,0 +1,101 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="mb-snackbar">
+  <template>
+    <style>
+
+      :host {
+        display: block;
+        position: fixed;
+        left: calc(50% - 160px);
+        right: calc(50% - 160px);
+        bottom: 0;
+        width: 320px;
+        background-color: rgba(0,0,0,0.8);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        color: white;
+        padding: 12px;
+        visibility: hidden;
+        text-align: center;
+        will-change: transform;
+        -webkit-transform: translate3d(0, 100%, 0);
+        transform: translate3d(0, 100%, 0);
+        transition-property: visibility, -webkit-transform;
+        transition-property: visibility, transform;
+        transition-duration: 0.2s;
+        z-index: 9999;
+      }
+
+      :host(.opened) {
+        visibility: visible;
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+      }
+
+      /* mobile */
+      @media (max-width: 767px) {
+        :host {
+          left: 0;
+          right: 0;
+          width: auto;
+        }
+      }
+    </style>
+
+    <content></content>
+
+  </template>
+  <script>
+
+    Polymer({
+
+      is: 'mb-snackbar',
+
+      hostAttributes: {
+        role: 'alert',
+        'aria-live': 'assertive'
+      },
+
+      properties: {
+
+        opened: {
+          type: Boolean,
+          observer: '_openedChanged'
+        },
+
+        duration: {
+          type: Number,
+          value: null
+        }
+
+      },
+
+      _openedChanged: function(opened) {
+        if (opened) {
+          this.open();
+        } else {
+          this.close();
+        }
+      },
+
+      open: function() {
+        Polymer.dom.flush();
+        this.removeAttribute('aria-hidden');
+        this.offsetHeight && this.classList.add('opened');
+
+        if (typeof this.duration === 'number') {
+          this.debounce('_close', function() {
+            this.close();
+          }.bind(this), this.duration);
+        }
+      },
+
+      close: function() {
+        this.setAttribute('aria-hidden', 'true');
+        this.classList.remove('opened');
+      }
+
+    });
+
+  </script>
+</dom-module>

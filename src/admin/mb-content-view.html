@@ -1,0 +1,277 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="mb-content-view">
+  <template>
+    <style>
+      :host {
+        --wysiwyg-toolbar: {
+          background: #31a0e0;
+        }
+      }
+
+      form {
+        margin: 10px;
+        padding: 10px;
+      }
+
+      .datesDiv {
+        @apply(--layout-horizontal);
+      }
+
+      .datesDiv paper-input, paper-dropdown-menu {
+        width: 100%;
+        margin: 0px 10px 0px 0px;
+      }
+
+      .divButtons {
+        margin: 10px;
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+      }
+
+      wysiwyg-e {
+        min-height: 50vh;
+      }
+
+      .red {
+        background: var(--paper-red-a700);
+        color: #FFF;
+      }
+
+      label {
+        font-family: 'Roboto', 'Noto', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: 0.011em;
+        line-height: 20px;
+        color: #a0a0a0;
+      }
+
+      paper-radio-group {
+        display: block;
+      }
+
+      @media (max-width: 450px) {
+        .datesDiv {
+          @apply(--layout-vertical);
+        }
+      }
+    </style>
+    <paper-toast id="toast"></paper-toast>
+    <app-header-layout has-scrolling-region>
+      <app-header fixed shadow>
+        <app-toolbar>
+          <content select="[drawer-toggle]"></content>
+          <h2 main-title>[[_mode(editing)]]</h2>
+        </app-toolbar>
+      </app-header>
+
+      <form is="iron-form" id="form" method="get" action="/">
+        <paper-input label="Title" value="{{item.title}}" required></paper-input>
+        <div class="datesDiv">
+          <paper-dropdown-menu label="Type" required>
+            <paper-listbox class="dropdown-content" attr-for-selected="uid" selected="{{item.type}}">
+              <paper-item uid="1">Blog</paper-item>
+              <paper-item uid="0">Partner</paper-item>
+            </paper-listbox>
+          </paper-dropdown-menu>
+          <paper-input label="Date & Time Created" value="[[item.creationDate]]" disabled></paper-input>
+          <paper-input label="Date & Time Changed" value="[[item.modificationDate]]" disabled></paper-input>
+        </div>
+
+
+        <div>
+          <label for="body">Body</label>
+          <wysiwyg-e id="body" value="{{item.body}}">
+            <wysiwyg-tool-bold></wysiwyg-tool-bold>
+            <wysiwyg-tool-italic></wysiwyg-tool-italic>
+            <wysiwyg-tool-underline></wysiwyg-tool-underline>
+            <wysiwyg-tool-strike></wysiwyg-tool-strike>
+            <wysiwyg-tool-clear></wysiwyg-tool-clear>
+            <wysiwyg-tool-code></wysiwyg-tool-code>
+            <wysiwyg-tool-link></wysiwyg-tool-link>
+            <wysiwyg-tool-image></wysiwyg-tool-image>
+            <wysiwyg-tool-ordered></wysiwyg-tool-ordered>
+            <wysiwyg-tool-unordered></wysiwyg-tool-unordered>
+            <wysiwyg-tool-indent></wysiwyg-tool-indent>
+            <wysiwyg-tool-outdent></wysiwyg-tool-outdent>
+            <wysiwyg-tool-justify right center full></wysiwyg-tool-justify>
+            <wysiwyg-tool-heading h1 h2 h3 h4 h5 h6></wysiwyg-tool-heading>
+            <wysiwyg-tool-blockquote></wysiwyg-tool-blockquote>
+            <wysiwyg-tool-undo></wysiwyg-tool-undo>
+            <wysiwyg-tool-redo></wysiwyg-tool-redo>
+          </wysiwyg-e>
+        </div>
+
+        <div>
+          <label for="noticed">To be Noticed</label>
+          <wysiwyg-e id="noticed" value="{{item.notice}}">
+            <wysiwyg-tool-bold></wysiwyg-tool-bold>
+            <wysiwyg-tool-italic></wysiwyg-tool-italic>
+            <wysiwyg-tool-underline></wysiwyg-tool-underline>
+            <wysiwyg-tool-strike></wysiwyg-tool-strike>
+            <wysiwyg-tool-clear></wysiwyg-tool-clear>
+            <wysiwyg-tool-code></wysiwyg-tool-code>
+            <wysiwyg-tool-link></wysiwyg-tool-link>
+            <wysiwyg-tool-image></wysiwyg-tool-image>
+            <wysiwyg-tool-ordered></wysiwyg-tool-ordered>
+            <wysiwyg-tool-unordered></wysiwyg-tool-unordered>
+            <wysiwyg-tool-indent></wysiwyg-tool-indent>
+            <wysiwyg-tool-outdent></wysiwyg-tool-outdent>
+            <wysiwyg-tool-justify right center full></wysiwyg-tool-justify>
+            <wysiwyg-tool-heading h1 h2 h3 h4 h5 h6></wysiwyg-tool-heading>
+            <wysiwyg-tool-blockquote></wysiwyg-tool-blockquote>
+            <wysiwyg-tool-undo></wysiwyg-tool-undo>
+            <wysiwyg-tool-redo></wysiwyg-tool-redo>
+          </wysiwyg-e>
+        </div>
+
+
+        <label for="imagesUploader">Images</label>
+        <mb-images-uploader id="imagesUploader"
+                            images="{{item.images}}"
+                            parent="[[item.$key]]"
+                            on-upload-complete="_saveRecord">
+        </mb-images-uploader>
+
+        <label>Status</label>
+        <div>
+          <paper-radio-button disabled checked="[[item.published]]">Published</paper-radio-button>
+          <paper-radio-button disabled checked="[[!item.published]]">Unpublished</paper-radio-button>
+        </div>
+
+        <div class="facebookDiv" hidden$="[[_isBlog(item.type)]]">
+          <paper-input label="Facebook Page" value="{{item.facebookPage}}"></paper-input>
+          <mb-facebook-plugin page="[[item.facebookPage]]"></mb-facebook-plugin>
+        </div>
+
+        <div class="divButtons">
+          <paper-button raised on-tap="_saveDraft">Save Draft</paper-button>
+          <paper-button raised disabled$="[[!editing]]" on-tap="_preview">Preview</paper-button>
+          <paper-button raised on-tap="_cancel">Cancel</paper-button>
+          <paper-button raised on-tap="_publish">Publish</paper-button>
+          <paper-button raised>Export</paper-button>
+          <paper-button raised class="red" hidden$="[[!editing]]" on-tap="_delete">Delete</paper-button>
+        </div>
+      </form>
+    </app-header-layout>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-content-view',
+
+      properties: {
+        author: String,
+        item: Object
+      },
+
+      attached: function(){
+        Polymer.RenderStatus.afterNextRender(this, function(){
+          this.setContent({}, false);
+        });
+      },
+
+      setContent: function(content, editing){
+        this.editing = editing;
+        this._content = content;
+        if (!this.editing) {
+          content.creationDate = new Date().toGMTString();
+          content.modificationDate = new Date().toGMTString();
+        }
+
+        this.item = this._defaultItem();
+      },
+
+      validateForm: function(){
+        var defaultValue = '<p class="style-scope wysiwyg-e"><br class="style-scope wysiwyg-e"></p>';
+        if (this.$.form.validate()) {
+          return true;
+        } else {
+          this.$.toast.text = 'Please verify the mandatory fields';
+          this.$.toast.open();
+          return false;
+        }
+      },
+
+      _saveDraft: function(){
+        this.set('item.published', false);
+        this._uploadImages();
+      },
+
+      _preview: function(){
+        var type = this._getTypeLabel(this.item.type);
+        var image = this.item.images[0] ? this.item.images[0] : {lat: 0, lng: 0};
+        var location = '@' + image.lat.toFixed(5) + ',' + image.lng.toFixed(5) + ',8z';
+        var path = [type, type + 's', location, this.item.$key];
+        window.history.pushState({}, null, '/#/' + path.join('/'));
+        window.dispatchEvent(new CustomEvent('location-changed'));
+      },
+
+      _publish: function(){
+        this.set('item.published', true);
+        this._uploadImages();
+      },
+
+      _cancel: function(){
+        this.item = this._defaultItem();
+      },
+
+      _delete: function(){
+        if (confirm('Are you sure to delete this content?')) {
+          this.$.imagesUploader.deleteFolder();
+          this._cancel();
+          this.fire('delete-record', this.item);
+        }
+      },
+
+      _uploadImages: function(){
+        if (this.validateForm()) {
+          this.$.toast.text = 'Saving...';
+          this.$.toast.open();
+          this.$.imagesUploader.uploadImages();
+        }
+      },
+
+      _saveRecord: function(){
+        if (this.editing) {
+          this.item.modificationDate = new Date().toGMTString();
+        }
+        this.item.author = this.author;
+        this.item.type = Number(this.item.type);
+        this.$.toast.text = 'Saved Successfully';
+        this.$.toast.open();
+        this.fire('save-record', {model: this.item, editing: this.editing});
+        this.editing = true;
+      },
+
+      _mode: function(editing){
+        return editing ? 'Editing Content' : 'Adding Content';
+      },
+
+      _isBlog: function(type){
+        return type == '1';
+      },
+
+      _defaultItem: function(){
+        var content = JSON.parse(JSON.stringify(this._content));
+        if (!content.images) {
+          content.published = false;
+          content.type = 1;
+          content.images = [];
+          content.$key = generatePushID();
+        }
+
+        return content;
+      },
+
+      _getTypeLabel: function(type){
+        return type ? 'blog' : 'partner';
+      }
+    });
+  </script>
+</dom-module>

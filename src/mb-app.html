@@ -1,0 +1,372 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-storage-script.html">
+<link rel="import" href="admin/mb-login.html">
+<link rel="import" href="mb-pages.html">
+<link rel="import" href="mb-data.html">
+
+<link rel="import" href="key-storage.html">
+
+<dom-module id="mb-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      mb-pages {
+        height: 100%;
+      }
+    </style>
+
+    <key-storage
+      firebase-app="{{_fbAppKey}}"
+      firebase-msg="{{_fbMsgId}}"></key-storage>
+
+    <firebase-app api-key="[[_fbAppKey]]"
+                  auth-domain="mblog4tiyogo.firebaseapp.com"
+                  database-url="https://mblog4tiyogo.firebaseio.com"
+                  storage-bucket="mblog4tiyogo.appspot.com"
+                  messaging-sender-id="[[_fbMsgId]]">
+    </firebase-app>
+    <!--
+      app-location and app-route elements provide the state of the URL for the app.
+    -->
+    <app-location route="{{route}}" use-hash-as-path></app-location>
+    <app-route route="[[route]]"
+               pattern="/:page"
+               tail="{{subPath}}"
+               data="{{routePage}}">
+    </app-route>
+
+    <app-route route="[[subPath]]"
+               pattern="/:category/:mapView/:itemId"
+               data="{{routeData}}">
+    </app-route>
+    <!--
+      mb-data provides the list of blogs and partners.
+    -->
+    <mb-data blogs="{{blogs}}"
+             blog="{{blog}}"
+             blog-id="[[blogId]]"
+             partners="{{partners}}"
+             partner="{{partner}}"
+             partner-id="[[partnerId]]"
+             loading="{{loading}}"
+             offline="[[offline]]"
+             failure="{{failure}}">
+    </mb-data>
+
+    <iron-media-query query="(max-width: 767px)" query-matches="{{smallScreen}}"></iron-media-query>
+
+    <mb-pages role="main"
+              attr-for-selected="name"
+              selected-attribute="visible"
+              selected-values="[[_computeSelectedPages(page, smallScreen)]]"
+              multi>
+      <mb-list-page name="list"
+                    blogs="[[blogs]]"
+                    partners="[[partners]]"
+                    category="[[routeData.category]]"
+                    small-screen="[[smallScreen]]">
+      </mb-list-page>
+
+      <mb-blog-page name="blog"
+                    small-screen="[[smallScreen]]"
+                    blog="[[blog]]">
+      </mb-blog-page>
+
+      <mb-partner-page name="partner"
+                       small-screen="[[smallScreen]]"
+                       partner="[[partner]]">
+      </mb-partner-page>
+
+      <mb-map-page name="map"
+                   small-screen="[[smallScreen]]"
+                   load-complete="[[loadComplete]]"
+                   blog="[[blog]]"
+                   partner="[[partner]]"
+                   blogs="[[blogs]]"
+                   partners="[[partners]]"
+                   map-view="[[routeData.mapView]]">
+      </mb-map-page>
+
+      <mb-admin name="admin" route="[[route]]" user="[[user.uid]]">
+        <mb-login user="{{user}}"></mb-login>
+      </mb-admin>
+    </mb-pages>
+
+    <overlay-container></overlay-container>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-app',
+
+      properties: {
+        page: {
+          type: String,
+          reflectToAttribute: true,
+          observer: '_pageChanged'
+        },
+
+        partners: Array,
+
+        partnerId: {
+          type: String,
+          computed: '_computedPartnerId(page, routeData.itemId)'
+        },
+
+        partner: Object,
+
+        blogs: Array,
+
+        blogId: {
+          type: String,
+          computed: '_computedBlogId(page, routeData.itemId)'
+        },
+
+        blog: Object,
+
+        route: Object,
+
+        routeData: Object,
+
+        smallScreen: Boolean,
+
+        failure: Boolean,
+
+        offline: {
+          type: Boolean,
+          value: false,
+          readOnly: true
+        },
+
+        loadComplete: Boolean,
+
+        _pageHistory: {
+          type: Array,
+          value: function(){
+            return [];
+          }
+        },
+
+        _updateSnackbar: Object,
+
+        _networkSnackbar: Object
+      },
+
+      listeners: {
+        'change-route': '_changeRoute',
+        'page-back': '_pageBack'
+      },
+
+      observers: [
+        '_routePageChanged(routePage.page)'
+      ],
+
+      created: function(){
+        // Custom elements polyfill safe way to indicate an element has been upgraded.
+        this.removeAttribute('unresolved');
+      },
+
+      attached: function(){
+        Polymer.RenderStatus.afterNextRender(this, function(){
+          this.listen(window, 'online', '_notifyNetworkStatus');
+          this.listen(window, 'offline', '_notifyNetworkStatus');
+        });
+      },
+
+      detached: function(){
+        this.unlisten(window, 'online', '_notifyNetworkStatus');
+        this.unlisten(window, 'offline', '_notifyNetworkStatus');
+      },
+
+      _routePageChanged: function(page){
+        if (!page) {
+          this.set('route.path', '/map/blogs//');
+          return;
+        }
+
+        // Keep a page History
+        this._pageHistory.unshift(page);
+        this._pageHistory.splice(25);
+
+        this.page = page;
+      },
+
+      _pageChanged: function(page, oldPage){
+        var href;
+
+        switch (page) {
+          case 'list':
+            href = 'mb-list-page.html';
+            break;
+          case 'blog':
+            href = 'mb-blog-page.html';
+            break;
+          case 'partner':
+            href = 'mb-partner-page.html';
+            break;
+          case 'map':
+            href = 'mb-map-page.html';
+            break;
+          case 'admin':
+            href = 'admin/mb-admin.html';
+            break;
+        }
+
+        // TODO: 404
+        if (href) {
+          this.importHref(
+            this.resolveUrl(href),
+            this._ensureLazyLoaded.bind(this),
+            null,
+            true);
+        }
+      },
+
+      _ensureLazyLoaded: function(){
+        // load lazy resources after render and set `loadComplete` when done.
+        if (!this.loadComplete) {
+          Polymer.RenderStatus.afterNextRender(this, function(){
+            this.importHref(this.resolveUrl('lazy-resources.html'), function(){
+              this._notifyNetworkStatus();
+              this.loadComplete = true;
+              // Load pre-caching Service Worker
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/service-worker.js')
+                  .then(this._onServiceWorkerRegistered.bind(this));
+              }
+            });
+          });
+        }
+      },
+
+      _onServiceWorkerRegistered: function(registration){
+        registration.onupdatefound = function(){
+          var installingWorker = registration.installing;
+
+          installingWorker.onstatechange = function(){
+            if (installingWorker.state === 'installed') {
+              if (navigator.serviceWorker.controller) {
+                this._displayUpdateSnackbar();
+              }
+            }
+          }.bind(this);
+        }.bind(this);
+      },
+
+      _notifyNetworkStatus: function(){
+        var oldOffline = this.offline;
+        this._setOffline(!window.navigator.onLine);
+        // Show the snackbar if the user is offline when starting a new session
+        // or if the network status changed.
+        if (this.offline || (!this.offline && oldOffline === true)) {
+          this._displayNetworkSnackbar();
+        }
+      },
+
+      /**
+       * Update the route with the supplied changes.
+       * e.g. this.fire('change-route', {category: 'partners'});
+       *
+       * @param {!Event} 'change-route' event
+       */
+      _changeRoute: function(event){
+        var change = event.detail;
+
+        var route = [
+          change.page || this.routePage.page,
+          change.category || this.routeData.category,
+          change.mapView || this.routeData.mapView,
+          change.itemId === null ? null : change.itemId || this.routeData.itemId
+        ];
+
+        if ((route[0] === 'partner' || route[0] === 'blog') && !route[3]) {
+          route[0] = 'list';
+        }
+
+        if (change.mapView) {
+          // don't create a new state when the map-view changes
+          history.replaceState({}, 'route', '/#/' + route.join('/'));
+        } else {
+          this.set('route.path', '/' + route.join('/'));
+        }
+      },
+
+      _pageBack: function(event){
+        var pages = event.detail.possiblePages || ['map'];
+        var match = pages[0];
+
+        for (i = 0; i < this._pageHistory.length; i++) {
+          if (pages.indexOf(this._pageHistory[i]) > -1) {
+            match = this._pageHistory[i];
+            break;
+          }
+        }
+
+        this.fire('change-route', {page: match});
+      },
+
+      _displayUpdateSnackbar: function(){
+        if (!this._updateSnackbar) {
+          this._updateSnackbar = this.create('mb-snackbar');
+          Polymer.dom(this.root).appendChild(this._updateSnackbar);
+        }
+
+        Polymer.dom(this._updateSnackbar).textContent = 'New versión available. Reload to update.'
+        this._updateSnackbar.opened = true;
+      },
+
+      _displayNetworkSnackbar: function(){
+        if (!this._networkSnackbar) {
+          this._networkSnackbar = this.create('mb-snackbar', {
+            duration: 3000
+          });
+          Polymer.dom(this.root).appendChild(this._networkSnackbar);
+        }
+
+        Polymer.dom(this._networkSnackbar).textContent = this.offline ?
+          'You are offline' : 'You are online';
+
+        this._networkSnackbar.opened = true;
+      },
+
+      _computedPartnerId: function(page, itemId){
+        if (page === 'partner') {
+          return itemId;
+        }
+      },
+
+      _computedBlogId: function(page, itemId){
+        if (page === 'blog') {
+          return itemId;
+        }
+      },
+
+      _computeSelectedPages: function(page, smallScreen){
+        if (smallScreen) {
+          return [page];
+        }
+
+        // These pages are always visible on desktop.
+        var admin = page === 'admin';
+        var pages = [admin ? 'my-list' : 'list', admin ? 'admin' : 'map'];
+
+        if (pages.indexOf(page) < 0) {
+          pages.push(page);
+        }
+
+        return pages;
+      }
+
+    });
+
+  </script>
+</dom-module>

@@ -1,0 +1,131 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-drawer/app-drawer.html">
+<script src="../scripts/mb-utils.js"></script>
+
+<dom-module id="mb-admin">
+  <template>
+    <style>
+      :host {
+        --app-drawer-width: 400px;
+      }
+
+      @media (max-width: 400px) {
+        :host {
+          --app-drawer-width: 100%;
+        }
+      }
+
+      [drawer-toggle] {
+        text-decoration: none;
+        color: black;
+        margin: 10px;
+        cursor: pointer;
+      }
+    </style>
+
+    <app-route route="[[route]]"
+               pattern="/admin/:section"
+               data="{{routeData}}"
+               tail="{{subRoute}}">
+    </app-route>
+
+    <app-route route="[[subRoute]]"
+               pattern="/:type/:uid"
+               data="{{editData}}">
+    </app-route>
+
+    <mb-user-data user="[[user]]"
+                  content-list="{{items}}"
+                  content-uid="[[editData.uid]]"
+                  content-type="[[editData.type]]"
+                  content="{{content}}">
+    </mb-user-data>
+
+    <app-drawer-layout fullbleed opened-when-narrow responsive-width="768px">
+      <app-drawer id="drawer" disable-swipe>
+        <mb-list-view items="[[items]]" selected="[[editData.uid]]">
+          <iron-icon icon="arrow-left" drawer-toggle on-tap="_backUrl"></iron-icon>
+          <content select="mb-login"></content>
+        </mb-list-view>
+      </app-drawer>
+
+      <mb-content-view author="[[user]]" on-save-record="_saveRecord" on-delete-record="_deleteRecord">
+        <a href="/#/admin/list" drawer-toggle>
+          <iron-icon icon="menu"></iron-icon>
+        </a>
+      </mb-content-view>
+    </app-drawer-layout>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-admin',
+
+      properties: {
+        route: String,
+        user: String
+      },
+
+      observers: [
+        '_userChanged(user)',
+        '_routeChange(routeData.section, user, subRoute, resourcesLoaded)',
+        '_upsertContent(content, section)'
+      ],
+
+      _userChanged: function(user){
+        if (user) {
+          Polymer.RenderStatus.afterNextRender(this, function(){
+            this.importHref(this.resolveUrl('lazy-resources.html'), function(){
+              this.resourcesLoaded = true;
+            }, null, true);
+          });
+        }
+      },
+
+      _routeChange: function(section, user, subRoute, resourcesLoaded){
+        if (user && resourcesLoaded) {
+          this.debounce('section-update', function(){
+            this.section = section;
+            this.editing = true;
+
+            if (section === 'content' && subRoute.path === '') {
+              this.editing = false;
+              this.set('editData.uid', '');
+              this.content = {};
+            }
+
+            if (!this.$.drawer.persistent) {
+              this.$.drawer[section === 'list' ? 'open' : 'close']();
+            }
+          }, 100);
+        }
+      },
+
+      _upsertContent: function(content, section){
+        if (content && section === 'content') {
+          this.debounce('setting-content', function(){
+            this.$$('mb-content-view').setContent(content, this.editing);
+          }, 100);
+        }
+      },
+
+      _backUrl: function(){
+        if (this.user) {
+          window.history.back();
+        } else {
+          window.history.pushState({}, null, '/#/');
+          window.dispatchEvent(new CustomEvent('location-changed'));
+        }
+      },
+
+      _saveRecord: function(e, detail){
+        this.$$('mb-user-data').upsertContent(detail.model, detail.editing);
+      },
+
+      _deleteRecord: function(e, detail){
+        this.$$('mb-user-data').deleteContent(detail);
+      }
+    });
+  </script>
+</dom-module>

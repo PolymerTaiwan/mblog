@@ -1,0 +1,120 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="mb-list-view">
+  <template>
+    <style>
+      :host {
+      }
+
+      iron-data-table {
+        height: calc(100% - 52px);
+      }
+
+      a {
+        margin-left: 5px;
+        text-decoration: none;
+        color: darkcyan;
+      }
+
+      [hidden] {
+        display: none;
+      }
+
+      iron-icon {
+        margin-left: 10px;
+      }
+
+      .cloud {
+        color: #31a0e0;
+      }
+
+      .cloud-off {
+        color: grey;
+      }
+
+      span.type {
+        text-transform: capitalize;
+      }
+    </style>
+
+    <app-header-layout has-scrolling-region>
+      <app-header fixed shadow>
+        <app-toolbar>
+          <content select="[drawer-toggle]"></content>
+          <div main-title>List of my content</div>
+
+          <a href="/#/admin/content">
+            <iron-icon icon="add"></iron-icon>
+          </a>
+        </app-toolbar>
+      </app-header>
+
+      <iron-data-table items="[[items]]"
+                       selection-enabled
+                       on-selecting-item="_selectingItem"
+                       on-deselecting-item="_deselectingItem">
+        <data-table-column name="Title" filter-by="title" sort-by="title">
+          <template>[[item.title]]</template>
+        </data-table-column>
+
+        <data-table-column name="Type" sort-by="type" width="25px">
+          <template>
+            <span class="type">[[_getTypeLabel(item.type)]]</span>
+          </template>
+        </data-table-column>
+
+        <data-table-column name="published" sort-by="published" width="25px">
+          <template>
+            <iron-icon icon="[[_getStatus(item.published)]]" class$="[[_getStatus(item.published)]]"></iron-icon>
+            <iron-icon hidden$="[[!selected]]" icon="create"></iron-icon>
+          </template>
+        </data-table-column>
+      </iron-data-table>
+
+      <content></content>
+    </app-header-layout>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-list-view',
+
+      properties: {
+        items: Array,
+        selected: String
+      },
+
+      observers: [
+        "_selectItem(selected, items)"
+      ],
+
+      _selectItem: function(uid, items){
+        if (uid && uid !== '' && items) {
+          var index = items.findIndex(function(item){
+            return item.$key === uid;
+          });
+          this.$$('iron-data-table').selectItem(index);
+        }
+      },
+
+      _selectingItem: function(item){
+        item = item.detail.item;
+        window.history.pushState({}, null, '/#/admin/content/' + this._getTypeLabel(item.type) + 's/' + item.$key);
+        window.dispatchEvent(new CustomEvent('location-changed'));
+      },
+
+      _deselectingItem: function(){
+        window.history.pushState({}, null, '/#/admin/content');
+        window.dispatchEvent(new CustomEvent('location-changed'));
+      },
+
+      _getTypeLabel: function(type){
+        return type ? 'blog' : 'partner';
+      },
+
+      _getStatus: function(published){
+        return published ? 'cloud' : 'cloud-off';
+      }
+    });
+  </script>
+</dom-module>

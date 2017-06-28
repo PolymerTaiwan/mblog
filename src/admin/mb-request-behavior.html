@@ -1,0 +1,89 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<script>
+  window.MB = window.MB || {};
+  /**
+   * @polymerBehavior MB.RequestBehavior
+   */
+  MB.RequestBehavior = {
+    properties: {
+      requests: {
+        type: Object,
+        value: {
+          addContent: {url: '/upsertContent', method: 'POST', exposed: true},
+          editContent: {url: '/upsertContent', method: 'PUT', exposed: true},
+          deleteContent: {url: '/deleteContent', method: 'POST', exposed: true}
+        }
+      },
+      apiToken: {
+        type: String,
+        observer: '_setKey'
+      }
+    },
+
+    ready: function(){
+      this.set('apiURL', 'https://us-central1-mblog4tiyogo.cloudfunctions.net/upsertContent');
+    },
+
+    _setKey: function(key){
+      if (key && key !== '') {
+        this.set('headers', {Authorization: key});
+      } else {
+        this.set('headers', {});
+      }
+    },
+    _handler: function(e){
+      var response = e.detail.response;
+
+      for (var key in response) {
+        if (this.requests[key].handler) {
+          this.requests[key].handler(response[key]);
+        }
+      }
+    },
+    _errorHandler: function(e){
+      //TODO: Handle error server responses
+      var response = e.detail;
+      console.log(response);
+    },
+
+    _doRequest: function(request, params){
+      if (params) {
+        if (request.method === 'GET')
+          request = this._constructRequest(params, request);
+        else
+          this.$.apiRequest.body = params;
+      }
+
+      this.set('request', request);
+      if (request.exposed || this.apiToken && this.apiToken !== '') {
+        this.$.apiRequest.generateRequest();
+        this.$.apiRequest.body = undefined;
+      }
+    },
+    _constructRequest: function(params, request){
+      request = JSON.parse(JSON.stringify(request));
+
+      if (params) {
+        var formatter = function(url, query){
+          var splitter = query ? '&' : '/';
+
+          return url.split(splitter).map(function(path){
+            if (path[0] === ':') {
+              var value = path.replace(':', '');
+              return (query ? value + '=' : '') + params[value];
+            }
+
+            return path;
+          }).join(splitter);
+        };
+
+        request.url = request.url.split('?').map(function(part, i){
+          return formatter(part, i);
+        }).join('?');
+      }
+
+      return request;
+    }
+  };
+</script>

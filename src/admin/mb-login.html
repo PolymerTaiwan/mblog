@@ -1,0 +1,100 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-auth.html">
+
+<dom-module id="mb-login">
+
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      button {
+        background: #39934e;
+        color: white;
+        border: 0;
+        border-radius: 3px;
+        text-transform: uppercase;
+        padding: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .horizontal {
+        @apply(--layout-horizontal-reverse);
+        @apply(--layout-center-center);
+        @apply(--layout-around-justified);
+        color: #39934e;
+      }
+
+      a {
+        text-decoration: none;
+        color: #39934e;
+      }
+
+      .loginOptions {
+        text-align: center;
+      }
+    </style>
+
+    <firebase-auth id="auth" user="{{user}}" provider="google"></firebase-auth>
+
+    <div hidden$="[[user]]" class="loginOptions main-title">
+       <h1>歡迎加入雲端導遊測試版，請以Google帳號登入</h1>
+	   <br>
+	     <span style="color:#000000;">
+         <font face="微軟正黑體"><h3 align="left">&nbsp;&nbsp;關於我們 About as</h3><hr size="5" color="#75c655">
+           
+             <h3 align="left">
+	          這是一個群共享平台，透過旅遊、美食、創作...等生活體驗的分享，幫每個人創造提供專案服務
+		      的機會，共創多贏得未來工作型態。<br><br>
+	          拍下精彩的片刻，寫出當下的感動(手機語音輸入更方便)，發佈即時的遊記(還可以賺外塊喔!)，同步到自己的臉書(就跟平常一樣!)
+			 </h3>
+	     </font>
+		 </span>
+      <button on-tap="signInWithGoogle">Sign In With Google</button>
+    </div>
+
+    <div class="horizontal">
+      <a href="/#/">
+        <iron-icon icon="home"></iron-icon>
+      </a>
+      <div class="loginOptions">
+        <div hidden$="[[!user.displayName]]">
+          Hi [[user.displayName]]
+        </div>
+        <button hidden$="[[!user]]" on-tap="signOut">Sign Out</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-login',
+
+      properties: {
+        user: {
+          type: Object,
+          notify: true
+        }
+      },
+
+      signInWithGoogle: function(){
+        this.$.auth.signInWithPopup();
+      },
+
+      signInAnonymously: function(){
+        this.$.auth.signInAnonymously();
+      },
+
+      signOut: function(){
+        this.$.auth.signOut();
+      },
+
+      get isLoggedIn(){
+        return this.$.auth.signedIn;
+      }
+    });
+  </script>
+</dom-module>

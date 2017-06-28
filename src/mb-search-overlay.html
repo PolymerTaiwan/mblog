@@ -1,0 +1,292 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/overlay-container/overlay-behavior.html">
+<link rel="import" href="../bower_components/fuzzaldrin-plus-import/fuzzaldrin-plus.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="mb-styles.html">
+
+<dom-module id="mb-search-overlay">
+  <template>
+    <style>
+      :host {
+        background: white;
+        border-bottom-left-radius: 3px;
+        border-bottom-right-radius: 3px;
+        box-shadow: 0 1px 4px 0px rgba(0, 0, 0, 0.3);
+        display: block;
+        position: fixed;
+      }
+
+      /* iron-list required */
+      [hidden] {
+        display: none !important;
+      }
+
+      #ironList {
+        width: 100%;
+        max-height: 200px;
+      }
+
+      .results__item {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+        padding: 10px 20px;
+        cursor: pointer;
+      }
+
+      .results__item--selected {
+        background: var(--paper-grey-100);
+      }
+
+      .results__icon {
+        margin-right: 16px;
+      }
+
+      iron-icon.results__icon {
+        color: var(--paper-grey-600);
+      }
+
+      .result__subtitle {
+        color: var(--paper-grey-600);
+        font-size: 14px;
+      }
+    </style>
+
+    <iron-list id="ironList" items="[[_results]]" as="result" max-physical-count="10">
+      <template>
+        <div class$="[[_computeResultsItemClass(index)]]"
+             data-index$="[[index]]"
+             on-mousedown="_onResultTapped">
+
+          <iron-icon class="results__icon" icon="map"></iron-icon>
+          <div>
+            <div>[[result.item.title]][[result.item.name]]</div>
+            <div class="result__subtitle"></div>
+          </div>
+        </div>
+      </template>
+    </iron-list>
+
+
+  </template>
+  <script>
+    Polymer({
+
+      is: 'mb-search-overlay',
+
+      properties: {
+
+        positionTarget: {
+          type: Object,
+          value: window
+        },
+
+        searchValue: {
+          type: String,
+          observer: '_searchValueChanged'
+        },
+
+        blogs: Array,
+
+        partners: Array,
+
+        places: Array,
+
+        _selectedIndex: {
+          type: Object,
+          observer: '_selectedIndexChanged'
+        },
+
+        // Parsed data of searchable items.
+        _data: {
+          type: Array,
+          observer: '_updateResults'
+        },
+
+        // Results of the search
+        _results: Array
+
+      },
+
+      behaviors: [
+        OverlayBehavior
+        /*
+         * @polymerBehavior OverlayBehavior
+         */
+      ],
+
+      observers: [
+        '_updateData(blogs, partners, places)'
+      ],
+
+      created: function(){
+        this._overlayOpened = this._overlayOpened.bind(this);
+        this._overlayClosed = this._overlayClosed.bind(this);
+        this._onKeydown = this._onKeydown.bind(this);
+      },
+
+      attached: function(){
+        this._toggleListeners(true);
+      },
+
+      detached: function(){
+        this._toggleListeners(false);
+      },
+
+      _toggleListeners: function(enable){
+        var m = enable ? 'addEventListener' : 'removeEventListener';
+
+        this[m]('overlay-opened', this._overlayOpened);
+        this[m]('overlay-closed', this._overlayClosed);
+        document.body[m]('keydown', this._onKeydown);
+      },
+
+      _overlayOpened: function(){
+        var rect = this.positionTarget.getBoundingClientRect();
+
+        this.style.top = rect.bottom + 'px';
+        this.style.left = rect.left + 'px';
+        this.style.right = document.body.offsetWidth - rect.right + 'px';
+      },
+
+      _selectedIndexChanged: function(selectedIndex, old){
+        var item;
+
+        if (typeof old === 'number' && old !== selectedIndex) {
+          item = this._getResultElementFromIndex(old);
+          if (item) {
+            item.classList.remove('results__item--selected');
+          }
+        }
+
+        if (typeof selectedIndex === 'number') {
+          item = this._getResultElementFromIndex(selectedIndex);
+          if (!item) {
+            return;
+          }
+          item.classList.add('results__item--selected');
+          if (item.scrollIntoViewIfNeeded) {
+            item.scrollIntoViewIfNeeded();
+          } else {
+            this.$.ironList.scrollToIndex(selectedIndex);
+          }
+        }
+      },
+
+      _onKeydown: function(event){
+        var upKey = 38;
+        var downKey = 40;
+        var enterKey = 13;
+
+        if (event.keyCode === upKey) {
+          event.preventDefault();
+          var prevIndex = this._selectedIndex - 1;
+          if (prevIndex > -1) {
+            this._selectedIndex = prevIndex;
+          }
+        }
+
+        if (event.keyCode === downKey) {
+          event.preventDefault();
+          var nextIndex = this._selectedIndex + 1;
+          if (nextIndex > -1 && nextIndex < this._results.length) {
+            this._selectedIndex = nextIndex;
+          }
+        }
+
+        if (event.keyCode === enterKey) {
+          event.preventDefault();
+          this._openResult(this._results[this._selectedIndex]);
+        }
+      },
+
+      _overlayClosed: function(){
+        this.remove();
+      },
+
+      _searchValueChanged: function(){
+        this._updateResults();
+      },
+
+      _updateData: function(blogs, partners, places){
+        var data = [];
+
+        blogs.forEach(function(blog){
+          data.push({
+            item: blog,
+            type: 'blog',
+            searchKey: this._slugify(blog.title)
+          });
+        }.bind(this));
+
+        partners.forEach(function(partner){
+          data.push({
+            item: partner,
+            type: 'partner',
+            searchKey: this._slugify(partner.title)
+          });
+        }.bind(this));
+
+        places.forEach(function(place){
+          data.push({
+            item: place,
+            type: 'place',
+            searchKey: this._slugify(place.name)
+          });
+        }.bind(this));
+
+        this._data = data;
+      },
+
+      _onResultTapped: function(event){
+        event.stopPropagation();
+        var index = Number(event.currentTarget.dataset.index);
+        var item = this._results[index];
+      },
+
+      _updateResults: function(){
+        this._results = [];
+        var results;
+
+        if (this.searchValue && this.searchValue.length > 1) {
+          results = fuzzaldrin.filter(
+            this._data, this.searchValue, {key: 'searchKey'});
+        } else {
+          results = [];
+        }
+
+        // iron-list needs a fixed height
+        this.$.ironList.style.height = results.length > 3 ? '200px' : '';
+        this._results = results;
+        this._selectedIndex = 0;
+      },
+
+      _getResultElementFromIndex: function(index){
+        if (this.$.ironList._physicalItems.length) {
+          return this.$.ironList._physicalItems[this.$.ironList._getPhysicalIndex(index)];
+        }
+      },
+
+      _computeResultsItemClass: function(index){
+        if (!index) {
+          return 'results__item results__item--selected';
+        }
+        return 'results__item';
+      },
+
+      _slugify: function(){
+        return Array.prototype.slice.call(arguments).map(function(text){
+          if (typeof text === 'string') {
+            return text.toString().toLowerCase()
+              .replace(/\s+/g, '-')     // Replace spaces with -
+              .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+              .replace(/\-\-+/g, '-')   // Replace multiple - with single -
+              .replace(/^-+/, '')       // Trim - from start of text
+              .replace(/-+$/, '');
+          }
+        }).join('-').replace(/--/, '-');
+      }
+
+    });
+
+  </script>
+</dom-module>

@@ -1,0 +1,85 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="mb-request-behavior.html">
+
+<dom-module id="mb-user-data">
+  <template>
+    <firebase-query path="/users/[[user]]/entries" data="{{contentList}}"></firebase-query>
+
+    <firebase-document path="/[[contentType]]/[[contentUid]]" data="{{_content}}"></firebase-document>
+    <firebase-query path="/images" data="{{_images}}"
+                    order-by-child="parent"
+                    equal-to="[[contentUid]]">
+    </firebase-query>
+
+    <iron-ajax id="apiRequest"
+               url="[[apiURL]][[request.url]]"
+               content-type="application/json"
+               method="[[request.method]]"
+               headers="[[headers]]"
+               on-response="_handler"
+               on-error="_errorHandler">
+    </iron-ajax>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-user-data',
+      behaviors: [MB.RequestBehavior],
+
+      properties: {
+        user: String,
+        contentList: {
+          type: Array,
+          notify: true
+        },
+
+        contentUid: String,
+        contentType: String,
+        content: {
+          type: Object,
+          readOnly: true,
+          notify: true
+        }
+      },
+
+      observers: [
+        '_contentSelected(_content, _images, contentUid, contentType)'
+      ],
+
+      attached: function(){
+        Polymer.RenderStatus.afterNextRender(this, function(){
+          this.requests.addContent.handler = this._requestCompleted.bind(this);
+          this.requests.editContent.handler = this._requestCompleted.bind(this);
+          this.requests.deleteContent.handler = this._requestCompleted.bind(this);
+        });
+      },
+
+      upsertContent: function(model, editing){
+        if (!editing) {
+          this._doRequest(this.requests.addContent, model);
+        }
+        else {
+          this._doRequest(this.requests.editContent, model);
+        }
+      },
+      deleteContent: function(key){
+        this._doRequest(this.requests.deleteContent, key);
+      },
+
+      _contentSelected: function(content, images, contentUid, contentType){
+        if (content && contentUid && contentType) {
+          this.debounce('setting-content', function(){
+            content.$key = contentUid;
+            content.type = contentType === 'blogs' ? 1 : 0;
+            content.images = images;
+            this._setContent(content);
+          }, 100);
+        }
+      },
+
+      _requestCompleted: function(e){
+        console.log(e);
+      }
+    });
+  </script>
+</dom-module>

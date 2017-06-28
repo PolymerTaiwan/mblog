@@ -1,0 +1,36 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": "auth != null",
+    "users": {
+      ".indexOn": [
+        "email"
+      ]
+    },
+    "images": {
+      ".read": true,
+      ".write": "auth !=null",
+      ".indexOn": [
+        "parent"
+      ]
+    },
+    "blogs": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": [
+        "author",
+        "title",
+        "published"
+      ]
+    },
+    "partners": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": [
+        "author",
+        "title",
+        "published"
+      ]
+    }
+  }
+}

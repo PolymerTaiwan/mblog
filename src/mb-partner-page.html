@@ -1,0 +1,47 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="mb-middle-page.html">
+<link rel="import" href="mb-styles.html">
+
+<dom-module id="mb-partner-page">
+  <template>
+    <style include="blog-partner-styles">
+      mb-share-buttons {
+        color: var(--mb-partner-color);
+      }
+    </style>
+
+    <mb-middle-page visible="[[visible]]" small-screen="[[smallScreen]]">
+      <mb-carousel class="carousel" images="[[partner.images]]"></mb-carousel>
+
+      <div class="container">
+        <h1 class="main-title">[[partner.title]]</h1>
+
+        <mb-share-buttons></mb-share-buttons>
+        <div class="body"></div>
+        <div class="notice"></div>
+      </div>
+    </mb-middle-page>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-partner-page',
+
+      properties: {
+        partner: Object,
+        visible: Boolean,
+        smallScreen: Boolean
+      },
+
+      observers: ['_bodyChanged(partner.body)', '_noticeChanged(partner.notice)'],
+
+      _bodyChanged: function(body){
+        this.$$('div.body').innerHTML = body;
+      },
+
+      _noticeChanged: function(notice){
+        this.$$('div.notice').innerHTML = notice;
+      }
+    });
+  </script>
+</dom-module>

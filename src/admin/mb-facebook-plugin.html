@@ -1,0 +1,66 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="mb-facebook-plugin">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <div id="facebook">
+
+      <div class="fb-page"
+           data-href="{{page}}"
+           data-width="300"
+           data-hide-cover="false"
+           data-show-facepile="false"
+           data-show-posts="false"></div>
+    </div>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-facebook-plugin',
+
+      properties: {
+        page: {
+          type: String,
+          value: 'https://www.facebook.com/facebook',
+          observer: '_renderFacebookActivityFeed'
+        },
+
+        appid:{
+          type: String,
+          value: ''
+        }
+      },
+
+      _renderFacebookActivityFeed: function(page){
+        if (page) {
+          var container = this.$.facebook;
+
+          if (!this.querySelector("script")) {
+            var js = document.createElement("script");
+            js.type = 'text/javascript';
+            js.src = "//connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.8";
+            this.appendChild(js);
+            var appid = this.appid;
+            // The function assigned to window.fbAsyncInit is run as soon as the SDK has completed loading.
+            window.fbAsyncInit = function(){
+              console.log('Facebook SDK ready!');
+              FB.init({
+                appId: appid,
+                xfbml: true,
+                version: 'v2.8'
+              });
+              FB.XFBML.parse(container);
+            }
+          }else{
+            FB.XFBML.parse(container);
+          }
+        }
+      }
+    });
+  </script>
+</dom-module>

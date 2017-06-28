@@ -1,0 +1,90 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="mb-styles.html">
+
+<dom-module id="mb-marker-content">
+  <template>
+    <style>
+      :host {
+        display: block;
+        width: 320px;
+      }
+
+      @media(max-width: 767px) {
+        :host {
+          width: 260px;
+        }
+      }
+
+      .container {
+        @apply(--layout-horizontal);
+      }
+
+      ::content iron-image {
+        height: 100px;
+        min-width: 100px;
+      }
+
+      .details {
+        @apply(--layout-vertical);
+        margin-left: 16px;
+        width: 100%;
+      }
+
+      ::content h3 {
+        @apply(--layout-flex);
+        margin: 4px 0;
+      }
+
+      button {
+        @apply(--unstyled-button);
+        color: white;
+        text-align: center;
+        width: 100%;
+        padding: 8px 10px;
+        font-size: inherit;
+      }
+
+      :host([type='blog']) button {
+        background: var(--mb-blog-color);
+      }
+
+     :host([type='partner']) button {
+        background: var(--mb-partner-color);
+      }
+    </style>
+
+    <div class="container">
+      <content select="iron-image"></content>
+
+      <div class="details">
+        <content select="h3"></content>
+        <button on-tap="_onOpenTapped">Open</button>
+      </div>
+    </div>
+
+  </template>
+  <script>
+
+    Polymer({
+
+      is: 'mb-marker-content',
+
+      properties: {
+
+        type: {
+          value: String,
+          reflectToAttribute: true
+        },
+
+        itemId: String
+
+      },
+
+      _onOpenTapped: function() {
+        this.fire('change-route', {page: this.type, itemId: this.itemId});
+      }
+
+    });
+
+  </script>
+</dom-module>

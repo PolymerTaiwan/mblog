@@ -1,0 +1,142 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="mb-styles.html">
+<link rel="import" href="mb-helpers.html">
+
+<dom-module id="mb-nearby-items">
+  <template>
+    <style>
+      :host {
+        box-sizing: border-box;
+        display: block;
+        height: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 10px;
+        white-space: nowrap;
+      }
+
+      .item {
+        background: white;
+        border-radius: 2px;
+        box-shadow: 0 1px 4px 0 rgba(0,0,0,0.16);
+        box-sizing: border-box;
+        display: inline-block;
+        height: 100%;
+        margin-right: 10px;
+        vertical-align: top;
+        width: 200px;
+      }
+
+      .item__iron-image {
+        float: left;
+        height: calc(100% - 38px);
+        width: 100%;
+      }
+
+      .item__title {
+        box-sizing: border-box;
+        color: var(--paper-grey-700);
+        font-size: 14px;
+        height: 38px;
+        line-height: 40px;
+        overflow: hidden;
+        padding: 0 14px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+      }
+    </style>
+
+    <template is="dom-repeat" items="[[_items]]">
+      <div class$="item item--[[item.value.type]]" on-tap="_itemTapped">
+        <div class="item__title">[[item.value.title]]</div>
+        <iron-image class="item__iron-image" src="[[item.value.images.0]]" sizing="cover"></iron-image>
+      </div>
+    </template>
+
+  </template>
+  <script>
+
+    Polymer({
+
+      is: 'mb-nearby-items',
+
+      properties: {
+
+        latitude: Number,
+
+        longitude: Number,
+
+        blogs: Array,
+
+        partners: Array,
+
+        _items: Array,
+
+        _throttleUpdateItems: Function
+
+      },
+
+      observers: [
+        '_updateItems(blogs, partners, latitude, longitude)'
+      ],
+
+      _itemTapped: function(event) {
+        var item = event.model.item.value;
+
+        this.fire('change-route', {page: item.type, itemId: item.id});
+      },
+
+      _updateItems: function() {
+        if (!this._throttleUpdateItems) {
+          this._throttleUpdateItems = mb.throttle(function() {
+            var source = (this.blogs || []).concat(this.partners || []);
+            var items = [];
+            var distance;
+
+            for (var i = 0; i < source.length; i++) {
+              distance = this._calculateDistance(
+                this.latitude, this.longitude, source[i].lat, source[i].lng, 'k');
+
+              if (distance < 50) {
+                items.push({
+                  distance: distance,
+                  value: source[i]
+                });
+              }
+            }
+
+            items.sort(function(a, b) {
+              return a.distance - b.distance;
+            });
+
+            this._items = items.slice(0,9);
+          }.bind(this), 600, this);
+        }
+
+        this._throttleUpdateItems();
+      },
+
+      _calculateDistance: function(lat1, lon1, lat2, lon2, unit) {
+        var radlat1 = Math.PI * lat1/180
+        var radlat2 = Math.PI * lat2/180
+        var theta = lon1-lon2
+        var radtheta = Math.PI * theta/180
+        var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+        dist = Math.acos(dist)
+        dist = dist * 180/Math.PI
+        dist = dist * 60 * 1.1515
+        if (unit=='K') { dist = dist * 1.609344 }
+        if (unit=='N') { dist = dist * 0.8684 }
+        return dist
+     },
+
+     _computeItemBackground: function(item) {
+       return 'background-image: url(' + item + '); background-size: cover; color: white;';
+     }
+
+    });
+
+  </script>
+</dom-module>

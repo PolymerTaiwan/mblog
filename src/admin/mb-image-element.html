@@ -1,0 +1,88 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/paper-progress/paper-progress.html">
+
+<dom-module id="mb-image-element">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      span {
+        font-weight: bold;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        align-content: center;
+      }
+
+      .fields paper-input {
+        width: 90%;
+        margin: auto;
+      }
+
+      paper-progress {
+        width: 100%;
+      }
+    </style>
+
+    <div class="header">
+      <span> <iron-icon icon="description"></iron-icon> <label id="description">[[image.name]]</label></span>
+      <paper-icon-button id="deleteIcon" icon="clear" on-tap="_deleteImage"></paper-icon-button>
+    </div>
+
+    <div class="fields">
+      <paper-input label="Caption" value="{{image.caption}}" char-counter maxlength="72" required></paper-input>
+
+      <paper-input label="Latitude" value="{{lat}}" auto-validate
+                   type="number" min="-90" max="90" step="0.000000000000001">
+      </paper-input>
+
+      <paper-input label="Longitude" value="{{lng}}" auto-validate
+                   type="number" min="-180" max="180" step="0.000000000000001">
+      </paper-input>
+    </div>
+
+    <paper-progress value="[[image.progress]]"></paper-progress>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-image-element',
+
+      properties: {
+        image: {
+          type: Object,
+          observer: '_imageChange'
+        }
+      },
+
+      observers: ['_uploadComplete(image.progress)', '_parseGeo(lat, lng)'],
+
+      _imageChange: function(image){
+        this.lat = image.lat || 0;
+        this.lng = image.lng || 0;
+      },
+
+      _uploadComplete: function(progress){
+        if (progress == 100) {
+          this.$.description.style.color = 'green';
+        }
+      },
+      _parseGeo: function(lat, lng){
+        this.image.lat = parseFloat(lat) || 0;
+        this.image.lng = parseFloat(lng) || 0;
+      },
+
+      _deleteImage: function(){
+        this.fire("deleted", this.image);
+      }
+    });
+  </script>
+</dom-module>

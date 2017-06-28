@@ -1,0 +1,155 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="mb-styles.html">
+<link rel="import" href="mb-icons.html">
+<link rel="import" href="mb-search-overlay.html">
+
+<dom-module id="mb-search">
+  <template>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      .input-container {
+        position: relative;
+      }
+
+      #input {
+        background: white;
+        border-radius: 1px;
+        box-shadow: 0 1px 2px 0 rgba(0,0,0, 0.3);
+        box-sizing: border-box;
+        font-size: 18px;
+        height: 46px;
+        outline: 0;
+        padding: 0 15px 0 42px;
+        width: 100%;
+        z-index: 1;
+        position: relative;
+
+        border: 0;
+        border-bottom: 1px solid transparent;
+      }
+
+      #input[disabled] {
+        background: var(--paper-grey-100);
+        pointer-events: none;
+      }
+
+      :host([opened]) #input {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        border-color: var(--paper-grey-200);
+      }
+
+      .input__icon {
+        bottom: 0;
+        color: var(--paper-grey-600);
+        left: 12px;
+        margin: auto;
+        position: absolute;
+        top: 0;
+        z-index: 1;
+      }
+
+      :host([opened]) #background {
+        background: transparent;
+        bottom: 0;
+        left: 0;
+        position: fixed;
+        right: 0;
+        top: 0;
+      }
+    </style>
+
+    <div class="input-container">
+      <input
+          id="input"
+          disabled
+          on-input="_onInput"
+          on-focus="_onInputFocus"
+          on-blur="_onInputBlur"
+          placeholder="Search">
+
+      <iron-icon class="input__icon" icon="magnify"></iron-icon>
+    </div>
+
+    <mb-search-overlay
+        id="overlay"
+        no-auto-focus
+        opened="{{opened}}"
+        search-value="{{searchValue}}"
+        position-target="[[_computedPositionTarget(isAttached)]]"
+        blogs="[[blogs]]"
+        partners="[[partners]]"
+        places="[[places]]"></mb-search-overlay>
+
+    <div id="background" tabindex="-1"></div>
+
+  </template>
+  <script>
+
+    Polymer({
+
+      is: 'mb-search',
+
+      properties: {
+
+        opened: {
+          type: Boolean,
+          observer: '_openedChanged',
+          reflectToAttribute: true
+        },
+
+        blogs: Array,
+
+        partners: Array,
+
+        places: Array,
+
+        searchValue: {
+          type: String,
+          notify: true
+        }
+
+      },
+
+      _openedChanged: function(opened) {
+        if (opened) {
+          this.$.input.focus();
+        } else {
+          this.$.input.value = '';
+        }
+      },
+
+      _onInputFocus: function() {
+        this.opened = true;
+      },
+
+      _onInput: function() {
+        this.searchValue = this.$.input.value;
+      },
+
+      _onInputBlur: function(event) {
+        setTimeout(function() {
+          this.opened = false;
+        }.bind(this), 10);
+      },
+
+      _bodyKeydown: function(event) {
+        var escKey = 27;
+
+        if (event.keyCode === escKey) {
+          this.opened = false;
+        }
+      },
+
+      _computedPositionTarget: function() {
+        return this.$.input;
+      }
+
+    });
+
+  </script>
+</dom-module>

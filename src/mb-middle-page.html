@@ -1,0 +1,173 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="mb-styles.html">
+
+<dom-module id="mb-middle-page">
+  <template>
+    <style>
+      :host {
+        background: white;
+        box-sizing: border-box;
+        display: block;
+        height: 100%;
+        position: relative;
+      }
+
+      @media(min-width: 767px) {
+        :host {
+          background: var(--paper-grey-100);
+          border-left: 1px solid var(--paper-grey-300);
+          bottom: 0;
+          box-shadow: 0 0 20px rgba(0,0,0,0.3);
+          left: 360px;
+          position: fixed;
+          top: 0;
+          width: 400px;
+          z-index: 1;
+        }
+      }
+
+      @media(min-width: 1280px) {
+        :host {
+          left: 400px;
+          width: 600px;
+        }
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      .content {
+        height: 100%;
+        overflow-y: auto;
+      }
+
+      .close-mobile-button {
+        @apply(--unstyled-button);
+        color: white;
+        left: 10px;
+        padding: 6px;
+        position: absolute;
+        top: 10px;
+        z-index: 2;
+      }
+
+      @media(min-width: 767px) {
+        .close-desktop-button {
+          @apply(--unstyled-button);
+          background: var(--paper-grey-100);
+          box-shadow: 1px 0px 3px rgba(0,0,0,0.32);
+          color: var(--paper-grey-800);
+          height: 48px;
+          position: absolute;
+          right: -24px;
+          top: 12px;
+          width: 24px;
+        }
+
+        .close-desktop-button iron-icon {
+          margin-left: -2px;
+        }
+      }
+    </style>
+
+    <button class="close-mobile-button" on-tap="__backTapped" hidden$="[[!smallScreen]]">
+      <iron-icon icon="arrow-left"></iron-icon>
+    </button>
+
+    <template is="dom-if" if="[[!smallScreen]]">
+      <button class="close-desktop-button" on-tap="__closeTapped">
+        <iron-icon icon="chevron-left"></iron-icon>
+      </button>
+    </template>
+
+    <div class="content">
+      <content></content>
+    </div>
+
+  </template>
+  <script>
+    (function() {
+
+      var openedPages = [];
+
+      Polymer({
+
+        is: 'mb-middle-page',
+
+        properties: {
+
+          visible: {
+            type: Boolean,
+            observer: '__visibleChanged'
+          },
+
+          smallScreen: Boolean
+
+        },
+
+        __backTapped: function() {
+          this.fire('page-back', {possiblePages: ['map', 'list']});
+        },
+
+        __closeTapped: function() {
+          // Don't animate if it's a smallScreen
+          if (this.smallScreen) {
+            this.__finishClose();
+          } else {
+            this.__animateOut(this.__finishClose.bind(this));
+          }
+        },
+
+        __visibleChanged: function(visible) {
+          if (visible) {
+            openedPages.push(this);
+
+            // Don't animate if it's a small screen or there is another
+            // middle page already opened.
+            var shouldAnimate = !this.smallScreen && openedPages.length <= 1;
+            if (shouldAnimate) {
+              this.__animateIn();
+            }
+          } else {
+            setTimeout(function() {
+              openedPages.splice(openedPages.indexOf(this), 1);
+            }, 10);
+          }
+        },
+
+        __finishClose: function() {
+          this.fire('change-route', {itemId: null});
+        },
+
+        __animateIn: function() {
+          requestAnimationFrame(function() {
+            var animation = this.animate([
+              {transform: 'translateX(-100%)'},
+              {transform: 'translateX(0)'}
+            ], {
+              duration: 420,
+              easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)'
+            });
+          }.bind(this));
+        },
+
+        __animateOut: function(callback) {
+          requestAnimationFrame(function() {
+            var animation = this.animate([
+              {transform: 'translateX(0)'},
+              {transform: 'translateX(-100%)'}
+            ], {
+              duration: 200,
+              easing: 'cubic-bezier(0.0,0.0,0.2,1)'
+            });
+
+            animation.onfinish = callback;
+          }.bind(this));
+        },
+
+      });
+
+    })();
+  </script>
+</dom-module>

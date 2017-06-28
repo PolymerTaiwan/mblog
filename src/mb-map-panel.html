@@ -1,0 +1,152 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="mb-styles.html">
+<link rel="import" href="mb-nearby-items.html">
+
+<dom-module id="mb-map-panel">
+  <template>
+    <style>
+      :host {
+        @apply(--layout-vertical);
+        background: white;
+        bottom: 0;
+        box-shadow: 0 0 6px rgba(0,0,0,0.3);
+        box-sizing: border-box;
+        height: 240px;
+        left: 0;
+        position: absolute;
+        right: 0;
+        transform: translateY(182px);
+        z-index: 1;
+      }
+
+      .nav {
+        @apply(--layout-horizontal);
+        border-bottom: 1px solid var(--paper-grey-300);
+        color: var(--paper-grey-800);
+        height: 100%;
+        height: 58px;
+      }
+
+      .nav__item {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+        @apply(--layout-center-center);
+        font-size: 11px;
+        font-weight: bold;
+        line-height: 18px;
+        text-transform: uppercase;
+      }
+
+      .nav__item--selected {
+        color: var(--mb-primary-color);
+      }
+
+      .nav__item[disabled] {
+        color: var(--paper-grey-400);
+        pointer-events: none;
+      }
+
+      /* pages */
+      .content {
+        @apply(--layout-flex);
+        background: var(--paper-grey-100);
+      }
+    </style>
+
+    <div class="nav">
+      <div class="nav__item" on-tap="_currentLocationTapped" disabled$="[[loadingCurrentPosition]]">
+        <iron-icon icon="crosshairs-gps"></iron-icon>
+        Your location
+      </div>
+
+      <div class="nav__item" on-tap="_nearMeTapped">
+        <iron-icon icon="near-me"></iron-icon>
+        Near you
+      </div>
+
+      <div class="nav__item" on-tap="_exploreTapped">
+        <iron-icon icon="format-list-bulleted"></iron-icon>
+        Explore
+      </div>
+    </div>
+
+    <div class="content">
+      <mb-nearby-items
+        blogs="[[blogs]]"
+        partners="[[partners]]"
+        latitude="[[latitude]]"
+        longitude="[[longitude]]"></mb-nearby-items>
+    </div>
+
+  </template>
+  <script>
+
+    Polymer({
+
+      is: 'mb-map-panel',
+
+      properties: {
+
+        opened: {
+          type: Boolean,
+          observer: '_openedChanged'
+        },
+
+        blogs: Object,
+
+        partners: Object,
+
+        latitude: Number,
+
+        longitude: Number,
+
+        loadingCurrentPosition: Boolean
+
+      },
+
+      _openedChanged: function(opened, old) {
+        if (opened) {
+          var animation = this.animate([
+            {transform: 'translateY(182px)'},
+            {transform: 'translateY(0)'}
+          ], {
+            duration: 300,
+            easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)'
+          });
+
+          animation.onfinish = function() {
+            this.style.transform = 'translateY(0)';
+          }.bind(this);
+        } else if (typeof old === 'boolean' && old) {
+          var animation = this.animate([
+            {transform: 'translateY(0)'},
+            {transform: 'translateY(182px)'}
+          ], {
+            duration: 300,
+            easing: 'cubic-bezier(0.0,0.0,0.2,1)'
+          });
+
+          animation.onfinish = function() {
+            this.style.transform = 'translateY(182px)';
+          }.bind(this);
+        }
+      },
+
+      _exploreTapped: function(event) {
+        this.fire('change-route', {page: 'list'});
+      },
+
+      _nearMeTapped: function(event) {
+        this.opened = !this.opened;
+        var m = this.opened ? 'add' : 'remove';
+        event.currentTarget.classList[m]('nav__item--selected');
+      },
+
+      _currentLocationTapped: function() {
+        this.fire('center-current-position');
+      }
+
+    });
+
+  </script>
+</dom-module>

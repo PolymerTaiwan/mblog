@@ -1,0 +1,248 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="mb-styles.html">
+
+<dom-module id="mb-list-page">
+  <template>
+    <style>
+
+      :host {
+        background: white;
+        min-height: 100%;
+      }
+
+      @media (min-width: 767px) {
+        :host {
+          bottom: 0;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+          display: block;
+          left: 0;
+          position: fixed;
+          top: 0;
+          width: 360px;
+          z-index: 2;
+        }
+      }
+
+      @media (min-width: 1280px) {
+        :host {
+          width: 400px;
+        }
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      /* header block */
+      .header {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+        box-sizing: border-box;
+        height: 60px;
+        padding: 0 10px;
+      }
+
+      .header__title {
+        margin: 0 0 0 6px;
+      }
+
+      .header__logo {
+        display: block;
+        font-size: 16px;
+        font-weight: bold;
+        letter-spacing: 3px;
+        text-align: center;
+        width: 100%;
+      }
+
+      .header__admin {
+        color: darkgray;
+      }
+
+      .back-button {
+        @apply(--unstyled-button);
+        padding: 6px;
+      }
+
+      /* nav block */
+      .nav {
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.33);
+        display: block;
+      }
+
+      .nav__iron-selector {
+        @apply(--layout-horizontal);
+      }
+
+      .nav__item {
+        @apply(--unstyled-button);
+        @apply(--layout-flex);
+        color: var(--paper-grey-700);
+        font-size: 14px;
+        font-weight: bold;
+        height: 42px;
+        position: relative;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .summary {
+        background: transparent);
+        border-radius: 50%;
+        box-sizing: border-box;
+        display: inline-block;
+        height: 24px;
+        margin-left: 8px;
+        padding-right: 1px;
+        padding-top: 3px;
+        right: 10px;
+        width: 24px;
+      }
+
+      .nav__item--selected .summary {
+        background: white;
+      }
+
+      .nav__item[name="blogs"],
+      .nav__item[name="blogs"] .summary {
+        color: var(--mb-blog-color);
+      }
+
+      .nav__item--selected[name="blogs"] {
+        background: var(--mb-blog-color);
+        color: white;
+      }
+
+      .nav__item[name="partners"],
+      .nav__item[name="partners"] .summary {
+        color: var(--mb-partner-color);
+      }
+
+      .nav__item--selected[name="partners"] {
+        background: var(--mb-partner-color);
+        color: white;
+      }
+
+      /* list block */
+      .list {
+        padding: 20px;
+      }
+
+      .list__heading {
+        font-weight: normal;
+        margin: 0 0 10px 0;
+      }
+
+      .list__item {
+        @apply(--layout-horizontal);
+        background: 0;
+        color: initial;
+        cursor: pointer;
+        font-size: initial;
+        outline: 0;
+        padding: 10px 0;
+        text-align: left;
+        width: 100%;
+
+        border: 0;
+        border-bottom: 1px solid var(--paper-grey-200);
+      }
+
+      .list__chevron {
+        margin-left: auto;
+        min-width: 24px;
+        padding-left: 10px;
+        color: var(--paper-grey-900);
+      }
+    </style>
+
+    <div class="header">
+      <button class="back-button" on-tap="_backTapped" hidden$="[[!smallScreen]]">
+        <iron-icon icon="arrow-left"></iron-icon>
+      </button>
+
+      <h2 class="header__title" hidden$="[[!smallScreen]]">Explore</h2>
+
+      <div class="header__logo" hidden$="[[smallScreen]]">雲端導遊即遊記</div>
+
+      <a class="header__admin" href="/#/admin/list">
+        <iron-icon icon="settings"></iron-icon>
+      </a>
+    </div>
+
+    <div class="nav">
+      <iron-selector
+        class="nav__iron-selector"
+        attr-for-selected="name"
+        selected-class="nav__item--selected"
+        selected="[[category]]">
+
+        <button class="nav__item" name="blogs" on-tap="_menuItemTapped">
+          好文分享
+          <span class="summary">[[blogs.length]]</span>
+        </button>
+        <button class="nav__item" name="partners" on-tap="_menuItemTapped">
+          推薦商家
+          <span class="summary">[[partners.length]]</span>
+        </button>
+      </iron-selector>
+    </div>
+
+    <div class="list">
+      <template is="dom-repeat" items="[[_computeDomRepeat(category, blogs, partners)]]">
+        <button class="list__item" on-tap="_listItemTapped">
+          [[item.title]]
+          <iron-icon class="list__chevron" icon="chevron-right"></iron-icon>
+        </button>
+      </template>
+    </div>
+
+  </template>
+  <script>
+
+    Polymer({
+
+      is: 'mb-list-page',
+
+      properties: {
+
+        category: String,
+
+        blogs: Array,
+
+        partners: Array,
+
+        smallScreen: Boolean
+
+      },
+
+      _backTapped: function(){
+        this.fire('change-route', {page: 'map'});
+      },
+
+      _menuItemTapped: function(event){
+        var category = event.currentTarget.getAttribute('name');
+        this.fire('change-route', {category: category});
+      },
+
+      _listItemTapped: function(event){
+        var item = event.model.item;
+
+        this.fire('change-route', {
+          page: item.type,
+          itemId: item.id
+        });
+      },
+
+      _computeDomRepeat: function(category, blogs, partners){
+        if (category === 'blogs') {
+          return blogs;
+        }
+        return partners;
+      }
+
+    });
+
+  </script>
+</dom-module>

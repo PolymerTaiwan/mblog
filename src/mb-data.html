@@ -1,0 +1,116 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+
+<dom-module id="mb-data">
+  <template>
+    <firebase-query path="/menu/blogs" data="{{_blogs}}"></firebase-query>
+    <firebase-query path="/menu/partners" data="{{_partners}}"></firebase-query>
+    <firebase-query path="/images" data="{{_images}}"></firebase-query>
+    <firebase-document path="/blogs/[[blogId]]" data="{{_blog}}"></firebase-document>
+    <firebase-document path="/partners/[[partnerId]]" data="{{_partner}}"></firebase-document>
+  </template>
+  <script>
+    (function(){
+
+      Polymer({
+
+        is: 'mb-data',
+
+        properties: {
+          blogs: {
+            type: Array,
+            readOnly: true,
+            notify: true
+          },
+          blogId: String,
+          blog: {
+            type: Object,
+            readOnly: true,
+            computed: '_itemSelected(_blog, blogId, blogs, _images)',
+            notify: true
+          },
+
+          partners: {
+            type: Array,
+            readOnly: true,
+            notify: true
+          },
+          partnerId: String,
+          partner: {
+            type: Object,
+            readOnly: true,
+            computed: '_itemSelected(_partner, partnerId, partners, _images)',
+            notify: true
+          },
+
+          offline: Boolean,
+          loading: {
+            type: Boolean,
+            readOnly: true,
+            notify: true
+          }
+        },
+
+        observers: [
+          '_itemsChanged(_blogs.*, "blog", _images.*)',
+          '_itemsChanged(_partners.*, "partner", _images.*)'
+        ],
+
+        _itemsChanged: function(items, type, images){
+          this.debounce('setting-items-' + type, function(){
+            var extract = this._extractImages;
+            var list = items.base.map(function(item){
+              item.type = type;
+              if (!item.id) {
+                Object.defineProperty(item, 'id', {
+                  get: function(){
+                    return this.$key;
+                  }
+                });
+              }
+              extract(item, images.base);
+              return item;
+            });
+
+            this['_set' + type[0].toUpperCase() + type.slice(1) + 's'](list);
+          }, 100);
+        },
+        _itemSelected: function(item, itemId, items, images){
+          return this._fillProperties(item, itemId, items, images);
+        },
+
+        _fillProperties: function(object, itemId, items, images){
+          object = JSON.parse(JSON.stringify(object));
+          var item = items.find(function(item){
+            return item.id === itemId;
+          });
+          object.id = itemId;
+
+          if (item) {
+            object.lat = item.lat;
+            object.lng = item.lng;
+            object.images = item.images;
+          } else {
+            this._extractImages(object, images);
+          }
+
+          return object;
+        },
+
+        _extractImages: function(item, images){
+          item.images = images.filter(function(image){
+            return image.parent === item.id;
+          });
+
+          item.lat = item.images[0] ? item.images[0].lat : 0;
+          item.lng = item.images[0] ? item.images[0].lng : 0;
+
+          item.images = item.images.map(function(image){
+            return image.file;
+          });
+        }
+      });
+    })();
+  </script>
+</dom-module>

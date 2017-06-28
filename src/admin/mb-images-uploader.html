@@ -1,0 +1,194 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="mb-image-element.html">
+<script src="../../bower_components/exif-js/exif.js"></script>
+<dom-module id="mb-images-uploader">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .dragArea {
+        display: flex;
+        flex-direction: column;
+        align-content: center;
+        justify-content: center;
+        align-items: center;
+        background: #e7e0e7;
+        cursor: pointer;
+        color: #747474;
+      }
+
+      .dragArea label {
+        margin: 50px;
+        cursor: pointer;
+      }
+
+      .imagesDiv {
+        padding: 10px;
+      }
+
+      #file {
+        user-select: none;
+        -moz-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        -o-user-select: none;
+        opacity: 0;
+        position: absolute;
+        z-index: -1;
+        display: none;
+        visibility: hidden;
+        tab-index: 0;
+      }
+    </style>
+
+    <div id="dragArea" on-tap="_tapSelect" class="dragArea" on-dragover="_handleDragOver" on-drop="_handleFileSelect">
+      <label for="file">Drag your Images Here or Click Here to Select</label>
+    </div>
+    <input type="file" id="file" on-change="_handleFiles" accept="image/*" tabindex="-1" multiple hidden>
+    <div class="imagesDiv">
+      <template is="dom-repeat" items="{{images}}">
+        <mb-image-element image="{{item}}" on-deleted="_deleteImage"></mb-image-element>
+      </template>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mb-images-uploader',
+
+      properties: {
+        images: {
+          type: Array,
+          value: [],
+          notify: true
+        },
+        parent: String
+      },
+
+      _handleFiles: function(e){
+        this._processFiles(e.target.files);
+      },
+
+      _processFiles: function(files){
+        if (!this.images) {
+          this.set('image', []);
+        }
+        for (var i = 0; i < files.length; i++) {
+          var self = this;
+          EXIF.getData(files[i], function(){
+            var currentImage = {name: this.name, blob: this, progress: 0};
+            var metadata = EXIF.getAllTags(this);
+            if (metadata.GPSLatitude && metadata.GPSLongitude) {
+              var lat = metadata.GPSLatitude;
+              var lon = metadata.GPSLongitude;
+              var latRef = metadata.GPSLatitudeRef || "N";
+              var lonRef = metadata.GPSLongitudeRef || "W";
+              currentImage.lat = (lat[0] + lat[1] / 60 + lat[2] / 3600) * (latRef == "N" ? 1 : -1);
+              currentImage.lng = (lon[0] + lon[1] / 60 + lon[2] / 3600) * (lonRef == "W" ? -1 : 1);
+            }
+            self.push('images', currentImage);
+          });
+        }
+      },
+
+      _deleteImage: function(e){
+        var image = e.target.image;
+        var index = this.images.indexOf(image);
+        if (index > -1) {
+          if (image.$key) {
+            var self = this;
+            var storageRef = firebase.storage().ref(this._getPath() + image.name);
+            storageRef.delete().then(function(){
+              self.fire('upload-complete');
+            }).catch(function(error){
+              console.error('Error deleting file', error);
+            });
+          }
+          this.splice('images', index, 1);
+        }
+      },
+
+      _tapSelect: function(e){
+        e.preventDefault();
+        this.$.file.click();
+      },
+
+      _handleDragOver: function(e){
+        e.stopPropagation();
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        this.$.dragArea.style.border = 'dashed 3px #747474';
+      },
+
+      _handleFileSelect: function(e){
+        e.stopPropagation();
+        e.preventDefault();
+        this._processFiles(e.dataTransfer.files);
+        this.$.dragArea.style.border = 'none';
+      },
+
+      _uploadOnFirebase: function(path, image, index){
+        if (firebase && image) {
+          if (image.$key || image.file) {
+            this._countImageUpload();
+          } else {
+            var storageRef = firebase.storage().ref(path + image.name);
+            var task = storageRef.put(image.blob);
+            var self = this;
+            task.on('state_changed', function progress(snapshot){
+              var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              self.set('images.' + index + '.progress', progress);
+            }, function error(err){
+              console.error('Error uploading file', err);
+            }, function complete(e){
+              storageRef.getDownloadURL().then(function(url){
+                self.set('images.' + index + '.file', url);
+                delete self.images[index].blob;
+                self._countImageUpload();
+              });
+              self.set('images.' + index + '.parent', self.parent);
+            });
+          }
+        }
+      },
+
+      _getPath: function(){
+        return 'images/' + this.parent + '/';
+      },
+
+      _countImageUpload: function(){
+        this.countImagesUploaded++;
+        if (this.countImagesUploaded >= this.images.length) {
+          this.fire('upload-complete');
+        }
+      },
+
+      uploadImages: function(){
+        if (this.images && this.images.length > 0) {
+          this.countImagesUploaded = 0;
+          for (var i = 0; i < this.images.length; i++) {
+            this._uploadOnFirebase(this._getPath(), this.images[i], i);
+          }
+        } else {
+          this.fire('upload-complete');
+        }
+      },
+
+      deleteFolder: function(e){
+        var images = this.images.concat();
+        for (i = 0; i < images.length; i++) {
+          var storageRef = firebase.storage().ref(this._getPath()+images[i].name);
+          storageRef.delete().then(function(){
+
+          }).catch(function(error){
+            console.error('Error deleting file', error);
+          });
+        }
+      }
+
+
+    });
+  </script>
+</dom-module>

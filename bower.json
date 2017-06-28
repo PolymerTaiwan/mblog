@@ -1,0 +1,45 @@
+{
+  "name": "mblog1",
+  "version": "0.1.0",
+  "authors": [
+    "Tiyogo co., ltd."
+  ],
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.0.0",
+    "app-layout": "polymerelements/app-layout#^1.0.0",
+    "app-localize-behavior": "PolymerElements/app-localize-behavior#^1.0.0",
+    "app-route": "polymerelements/app-route#^0.9.1",
+    "fuzzaldrin-plus-import": "https://github.com/sharedlabs/fuzzaldrin-plus-import.git",
+    "google-map": "GoogleWebComponents/google-map#^1.2.0",
+    "iron-flex-layout": "polymerelements/iron-flex-layout#^1.0.0",
+    "iron-icon": "PolymerElements/iron-icon#^1.0.12",
+    "iron-iconset-svg": "PolymerElements/iron-iconset-svg#^1.1.0",
+    "iron-list": "PolymerElements/iron-list#^1.4.1",
+    "iron-media-query": "PolymerElements/iron-media-query#^1.0.8",
+    "iron-pages": "polymerelements/iron-pages#^1.0.0",
+    "iron-selector": "PolymerElements/iron-selector#^1.5.2",
+    "overlay-container": "https://github.com/sharedlabs/overlay-container.git#^0.1.0",
+    "paper-spinner": "PolymerElements/paper-spinner#^1.2.1",
+    "touch-slider": "https://github.com/sharedlabs/touch-slider.git#^0.2.0",
+    "polymerfire": "firebase/polymerfire#^0.10.3",
+    "iron-data-table": "Saulis/iron-data-table#^1.0.6",
+    "paper-input": "PolymerElements/paper-input#^1.1.23",
+    "paper-card": "PolymerElements/paper-card#^1.1.4",
+    "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#^1.5.0",
+    "paper-listbox": "PolymerElements/paper-listbox#^1.1.2",
+    "paper-item": "PolymerElements/paper-item#^1.2.1",
+    "paper-radio-group": "PolymerElements/paper-radio-group#^1.2.1",
+    "paper-radio-button": "PolymerElements/paper-radio-button#^1.3.3",
+    "paper-progress": "PolymerElements/paper-progress#^1.0.11",
+    "exif-js": "^2.2.0",
+    "paper-icon-button": "PolymerElements/paper-icon-button#^1.1.4",
+    "iron-form": "PolymerElements/iron-form#^1.1.4",
+    "wysiwyg-e": "miztroh/wysiwyg-e#^1.1.0",
+    "paper-toast": "PolymerElements/paper-toast#^1.3.1",
+    "iron-ajax": "PolymerElements/iron-ajax#^1.4.4"
+  },
+  "devDependencies": {
+    "web-component-tester": "^4.0.0"
+  }
+}

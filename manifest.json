@@ -1,0 +1,21 @@
+{
+  "name": "mblog1",
+  "short_name": "mblog1",
+  "icons": [{
+      "src": "images/logo_tiyogo_128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    }, {
+      "src": "images/logo_tiyogo_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },{
+      "src": "images/logo_tiyogo_384.png",
+      "sizes": "384x384",
+      "type": "image/png"  
+    }],
+  "start_url": "/",
+  "background_color": "#6baf51",
+  "display": "standalone",
+  "theme_color": "#6baf51"
+}

@@ -1,0 +1,137 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/touch-slider/touch-slider.html">
+<link rel="import" href="mb-icons.html">
+
+<dom-module id="mb-carousel">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .container,
+      #touchSlider {
+        height: 100%;
+        width: 100%;
+      }
+
+      .container {
+        position: relative;
+      }
+
+      .arrows {
+        border-radius: 2px;
+        bottom: 8px;
+        display: inline-block;
+        margin: auto;
+        overflow: hidden;
+        position: absolute;
+        right: 16px;
+        width: 80px;
+        z-index: 1;
+      }
+
+      .arrow {
+        @apply(--unstyled-button);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        display: inline-block;
+        float: left;
+        height: 38px;
+        text-align: center;
+        width: 50%;
+      }
+
+      .arrow[disabled] {
+        pointer-events: none;
+      }
+
+      .arrow[disabled] iron-icon {
+        color: rgba(255, 255, 255, 0.2);
+      }
+
+      .arrow:hover {
+        background: rgba(0, 0, 0, 0.55);
+      }
+
+      @media(max-width: 767px) {
+        .gradient {
+          background-image: -webkit-linear-gradient(to top,transparent,rgba(0,0,0,0.74));
+          background-image: linear-gradient(to top,transparent,rgba(0,0,0,0.74));
+          top: 0;
+          content: '';
+          height: 50px;
+          position: absolute;
+          width: 100%;
+          z-index: 1;
+        }
+      }
+    </style>
+
+    <div class="container">
+      <div class="gradient"></div>
+      <touch-slider
+          id="touchSlider"
+          items="[[images]]"
+          current-index="{{currentIndex}}">
+      </touch-slider>
+      <div class="arrows">
+        <button
+            disabled$="[[_isEqual(currentIndex, 0)]]"
+            class="arrow"
+            on-tap="prevSlide">
+          <iron-icon icon="arrow-left"></iron-icon>
+        </button>
+        <button
+            disabled$="[[_isEqual(currentIndex, maxIndex)]]"
+            class="arrow"
+            on-tap="nextSlide">
+          <iron-icon icon="arrow-right"></iron-icon>
+        </button>
+      </div>
+    </div>
+
+  </template>
+
+  <script>
+
+    Polymer({
+
+      is: 'mb-carousel',
+
+      properties: {
+
+        images: Array,
+
+        currentIndex: Number,
+
+        maxIndex: {
+          type: Number,
+          computed: '_computedMaxIndex(images)'
+        }
+
+      },
+
+      prevSlide: function() {
+        this.currentIndex = this.currentIndex - 1;
+      },
+
+      nextSlide: function() {
+        this.currentIndex = this.currentIndex + 1;
+      },
+
+      _computedMaxIndex: function(images) {
+        if (images) {
+          return images.length - 1;
+        }
+        return null;
+      },
+
+      _isEqual: function(a, b) {
+        return String(a) === String(b);
+      }
+
+    });
+
+  </script>
+</dom-module>
