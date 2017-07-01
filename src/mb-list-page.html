@@ -1,18 +1,18 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-localize-behavior/app-localize-behavior.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="mb-styles.html">
 
 <dom-module id="mb-list-page">
   <template>
     <style>
-
-      :host {
+       :host {
         background: white;
         min-height: 100%;
       }
 
       @media (min-width: 767px) {
-        :host {
+         :host {
           bottom: 0;
           box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
           display: block;
@@ -25,7 +25,7 @@
       }
 
       @media (min-width: 1280px) {
-        :host {
+         :host {
           width: 400px;
         }
       }
@@ -33,8 +33,8 @@
       [hidden] {
         display: none !important;
       }
-
       /* header block */
+
       .header {
         @apply(--layout-horizontal);
         @apply(--layout-center);
@@ -64,8 +64,8 @@
         @apply(--unstyled-button);
         padding: 6px;
       }
-
       /* nav block */
+
       .nav {
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.33);
         display: block;
@@ -123,8 +123,8 @@
         background: var(--mb-partner-color);
         color: white;
       }
-
       /* list block */
+
       .list {
         padding: 20px;
       }
@@ -164,7 +164,7 @@
 
       <h2 class="header__title" hidden$="[[!smallScreen]]">Explore</h2>
 
-      <div class="header__logo" hidden$="[[smallScreen]]">雲端導遊即遊記</div>
+      <div class="header__logo" hidden$="[[smallScreen]]">[[localize('banner')]]</div>
 
       <a class="header__admin" href="/#/admin/list">
         <iron-icon icon="settings"></iron-icon>
@@ -172,18 +172,14 @@
     </div>
 
     <div class="nav">
-      <iron-selector
-        class="nav__iron-selector"
-        attr-for-selected="name"
-        selected-class="nav__item--selected"
-        selected="[[category]]">
+      <iron-selector class="nav__iron-selector" attr-for-selected="name" selected-class="nav__item--selected" selected="[[category]]">
 
         <button class="nav__item" name="blogs" on-tap="_menuItemTapped">
-          好文分享
+          [[localize('posts')]]
           <span class="summary">[[blogs.length]]</span>
         </button>
         <button class="nav__item" name="partners" on-tap="_menuItemTapped">
-          推薦商家
+          [[localize('shops')]]
           <span class="summary">[[partners.length]]</span>
         </button>
       </iron-selector>
@@ -200,10 +196,13 @@
 
   </template>
   <script>
-
     Polymer({
 
       is: 'mb-list-page',
+
+      behaviors: [
+        Polymer.AppLocalizeBehavior
+      ],
 
       properties: {
 
@@ -213,20 +212,46 @@
 
         partners: Array,
 
-        smallScreen: Boolean
+        smallScreen: Boolean,
 
+        language: {
+          type: String,
+          value: function () {
+            if (!navigator || !navigator.language) return 'en';
+            var naviLang = navigator.language.split('-')[0].toLowerCase();
+
+            if (naviLang == 'zh') return 'zh';
+            else return 'en';
+          }
+        },
+
+        resources: {
+          type: Object,
+          value: {
+            'en': {
+              'banner': 'Cloud Guide',
+              'posts': "Editor's Pick",
+              'shops': 'Top Stores'
+            },
+            'zh': {
+              'banner': '雲端導遊即遊記',
+              'posts': '好文分享',
+              'shops': '推薦商家'
+            }
+          }
+        }
       },
 
-      _backTapped: function(){
-        this.fire('change-route', {page: 'map'});
+      _backTapped: function () {
+        this.fire('change-route', { page: 'map' });
       },
 
-      _menuItemTapped: function(event){
+      _menuItemTapped: function (event) {
         var category = event.currentTarget.getAttribute('name');
-        this.fire('change-route', {category: category});
+        this.fire('change-route', { category: category });
       },
 
-      _listItemTapped: function(event){
+      _listItemTapped: function (event) {
         var item = event.model.item;
 
         this.fire('change-route', {
@@ -235,7 +260,7 @@
         });
       },
 
-      _computeDomRepeat: function(category, blogs, partners){
+      _computeDomRepeat: function (category, blogs, partners) {
         if (category === 'blogs') {
           return blogs;
         }
@@ -243,6 +268,5 @@
       }
 
     });
-
   </script>
 </dom-module>
