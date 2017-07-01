@@ -9,10 +9,19 @@
   "sources": [
     "src/**/*",
     "images/**/*",
-    "index.html"
+    "index.html",
+    "bower.json"
   ],
   "extraDependencies": [
     "manifest.json",
     "bower_components/webcomponentsjs/webcomponents-lite.min.js"
+  ],
+
+  "builds": [
+    {
+      "preset": "es5-bundled",
+      "insertPrefetchLinks": false,
+      "addPushManifest": false
+    }
   ]
 }

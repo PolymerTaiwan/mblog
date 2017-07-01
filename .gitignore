@@ -8,4 +8,4 @@ firebase-debug\.log
 .tmp
 
 # Confidential Data
-src/key-storage.html
+/src/unpublished/

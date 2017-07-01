@@ -2,13 +2,11 @@
 <link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
 <link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-storage-script.html">
 <link rel="import" href="admin/mb-login.html">
 <link rel="import" href="mb-pages.html">
 <link rel="import" href="mb-data.html">
 
-<link rel="import" href="key-storage.html">
+<link rel="import" href="./unpublished/firebase-app-wrapper.html">
 
 <dom-module id="mb-app">
   <template>
@@ -24,16 +22,8 @@
       }
     </style>
 
-    <key-storage
-      firebase-app="{{_fbAppKey}}"
-      firebase-msg="{{_fbMsgId}}"></key-storage>
+    <firebase-app-wrapper></firebase-app-wrapper>
 
-    <firebase-app api-key="[[_fbAppKey]]"
-                  auth-domain="mblog4tiyogo.firebaseapp.com"
-                  database-url="https://mblog4tiyogo.firebaseio.com"
-                  storage-bucket="mblog4tiyogo.appspot.com"
-                  messaging-sender-id="[[_fbMsgId]]">
-    </firebase-app>
     <!--
       app-location and app-route elements provide the state of the URL for the app.
     -->

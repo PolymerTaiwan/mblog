@@ -22,7 +22,7 @@
     "overlay-container": "https://github.com/sharedlabs/overlay-container.git#^0.1.0",
     "paper-spinner": "PolymerElements/paper-spinner#^1.2.1",
     "touch-slider": "https://github.com/sharedlabs/touch-slider.git#^0.2.0",
-    "polymerfire": "firebase/polymerfire#^0.10.3",
+    "polymerfire": "firebase/polymerfire#^0.11.2",
     "iron-data-table": "Saulis/iron-data-table#^1.0.6",
     "paper-input": "PolymerElements/paper-input#^1.1.23",
     "paper-card": "PolymerElements/paper-card#^1.1.4",
