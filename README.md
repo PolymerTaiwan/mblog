@@ -6,19 +6,27 @@ https://mblog4tiyogo.firebaseapp.com
 
 ## Prerequisites
 
-### Polymer CLI
+```shell
+  npm install -g polymer-cli firebase-tools bower
+```
 
-Install [polymer-cli](https://github.com/Polymer/polymer-cli):
-(Need at least npm v0.3.0)
+- [polymer-cli](https://github.com/Polymer/polymer-cli): (Need at least npm v0.3.0)
+- Firebase Tools
+- Bower
 
-    npm install -g polymer-cli
+## Development
 
-Firebase Tools
-    npm install -g firebase-tools
+```shell
+  bower install
+  polymer serve
+```
 
-## Build
+## Deployment
 
-    polymer build
+```shell
+  polymer build
+  firebase deploy --only hosting
+```
 
 ## About Unpublished Files
 The files under `src/unpublished` folder are tend to be hidden. Since they are non-disclosure data like API keys. However, users are freely to provide their own ones. Here is the interfaces that users need to implement in order to make the app run:
