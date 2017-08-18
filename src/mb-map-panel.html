@@ -54,20 +54,20 @@
     </style>
 
     <div class="nav">
-      <a class="nav__item" on-tap="_currentLocationTapped" disabled$="[[loadingCurrentPosition]]" href="javascript:;">
+      <div class="nav__item" on-tap="_currentLocationTapped" disabled$="[[loadingCurrentPosition]]">
         <iron-icon icon="crosshairs-gps"></iron-icon>
         Your location
-      </a>
+      </div>
 
-      <a class="nav__item" on-tap="_nearMeTapped" href="javascript:;">
+      <div class="nav__item" on-tap="_nearMeTapped">
         <iron-icon icon="near-me"></iron-icon>
         Near you
-      </a>
+      </div>
 
-      <a class="nav__item" on-tap="_exploreTapped" href="javascript:;">
+      <div class="nav__item" on-tap="_exploreTapped">
         <iron-icon icon="format-list-bulleted"></iron-icon>
         Explore
-      </a>
+      </div>
     </div>
 
     <div class="content">
