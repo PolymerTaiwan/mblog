@@ -108,29 +108,27 @@
 
       _openedChanged: function(opened, old) {
         if (opened) {
-          var animation = this.animate([
-            {transform: 'translateY(182px)'},
-            {transform: 'translateY(0)'}
-          ], {
-            duration: 300,
-            easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)'
-          });
-
-          animation.onfinish = function() {
-            this.style.transform = 'translateY(0)';
-          }.bind(this);
+          this.animate([
+              {transform: 'translateY(182px)'},
+              {transform: 'translateY(0)'}
+            ], {
+              duration: 300,
+              easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)'
+            })
+            .onfinish = function() {
+              this.style.transform = 'translateY(0)';
+            }.bind(this);
         } else if (typeof old === 'boolean' && old) {
-          var animation = this.animate([
-            {transform: 'translateY(0)'},
-            {transform: 'translateY(182px)'}
-          ], {
-            duration: 300,
-            easing: 'cubic-bezier(0.0,0.0,0.2,1)'
-          });
-
-          animation.onfinish = function() {
-            this.style.transform = 'translateY(182px)';
-          }.bind(this);
+          this.animate([
+              {transform: 'translateY(0)'},
+              {transform: 'translateY(182px)'}
+            ], {
+              duration: 300,
+              easing: 'cubic-bezier(0.0, 0.0, 0.2, 1)'
+            })
+            .onfinish = function() {
+              this.style.transform = 'translateY(182px)';
+            }.bind(this);
         }
       },
 
