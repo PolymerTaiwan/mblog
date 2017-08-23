@@ -37,7 +37,8 @@
     "iron-form": "PolymerElements/iron-form#^1.1.4",
     "wysiwyg-e": "miztroh/wysiwyg-e#^1.1.0",
     "paper-toast": "PolymerElements/paper-toast#^1.3.1",
-    "iron-ajax": "PolymerElements/iron-ajax#^1.4.4"
+    "iron-ajax": "PolymerElements/iron-ajax#^1.4.4",
+    "web-animations-js": "^2.3.1"
   },
   "devDependencies": {
     "web-component-tester": "^4.0.0"

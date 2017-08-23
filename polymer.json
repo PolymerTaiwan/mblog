@@ -19,6 +19,7 @@
 
   "builds": [
     {
+      "name": "default",
       "preset": "es5-bundled",
       "insertPrefetchLinks": false,
       "addPushManifest": false
